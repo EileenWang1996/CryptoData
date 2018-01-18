@@ -1,0 +1,159 @@
+<head>
+	<!-- Plotly.js -->
+	<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+
+<body>
+	<font face="helvetica" color="black">
+	<div class="showcase__section" id="candle">
+		<div class="spacer --small"></div>
+		<div id="candleplots">
+			<div class="candleplot" data-num="0">
+				<div class="plot" id="plotdiv"></div>
+				<div class="control-row">
+					Cryptocurrency: <select class="currencydata">
+					</select>
+				</div>
+				</div>
+			</div>
+		</div>
+	<script>
+		Plotly.d3.csv("https://raw.githubusercontent.com/EileenWang1996/CryptoData/master/all_currencies.csv", function(err, rows){
+				function unpack(rows, key){
+					return rows.map(function(row){
+					return row[key];
+					});
+				}
+		//Unpacking data from csv file 
+		var allCurrencyNames = unpack(rows, 'Currency'),
+			allDate = unpack(rows, 'Date'),
+			allClose = unpack(rows, 'Close'),
+			allHigh = unpack(rows, 'High'),
+			allLow = unpack(rows, 'Low'),
+			allOpen = unpack(rows, 'Open'),
+			listofCurrencies = [],
+			currentCurrency, 
+			currentDate = [],
+			currentClose = [],
+			currentHigh = [],
+			currentLow = [],
+			currentOpen = [];
+		
+		//Find all the different currencies and push to list 
+		for(var i = 0; i < allCurrencyNames.length; i++){
+			if(listofCurrencies.indexOf(allCurrencyNames[i]) === -1){
+				listofCurrencies.push(allCurrencyNames[i]);
+			}
+		}
+		
+		//Get data from specific currency 
+		function getCurrencyData(chosenCurrency){
+			currentDate = [];
+			currentClose = [];
+			currentHigh = [];
+			currentLow = [];
+			currentOpen = [];
+			for(var i = 0; i < allCurrencyNames.length; i++){
+				if(allCurrencyNames[i] === chosenCurrency){
+					currentDate.push(allDate[i]);
+					currentClose.push(allClose[i]);
+					currentHigh.push(allHigh[i]);
+					currentLow.push(allLow[i]);
+					currentOpen.push(allOpen[i]);
+				}
+			}
+		};
+		
+		//Display default currency 
+		setCandlePlot('Ardor');
+		
+		function setCandlePlot(chosenCurrency){
+			getCurrencyData(chosenCurrency);
+			//Accumulate data from chosen currency 
+			var trace = {
+			x: currentDate,
+			close: currentClose,
+			high: currentHigh,
+			low: currentLow,
+			open: currentOpen,
+			
+			//customize colors 
+			increasing: {line: {color: '#17BECF'}},
+			decreasing: {line: {color: '#FF7777'}},
+			
+			type: 'candlestick', 
+			xaxis: 'x',
+			yaxis: 'y'
+			};
+		
+			var data = [trace];
+			
+			//Displaying chart 
+			var layout = {
+				title: chosenCurrency.concat(' Price Chart'),
+				height: 700,
+				width: 1000,
+				dragmode: 'zoom', 
+				showlegend: false, 
+				xaxis: {
+					autorange: true,
+					title: 'Date', 
+						rangeselector:{
+							x: 0,
+							y: 1.2, 
+							xanchor: 'left', 
+							font: {size: 8},
+							buttons: [{
+								step: 'month',
+								stepmode: 'backward',
+								count: 1,
+								label: '1 month'
+							}, {
+								step: 'month',
+								stepmode: 'backward',
+								count: 3,
+								label: '3 month'
+							},{
+								step: 'month',
+								stepmode: 'backward',
+								count: 6,
+								label: '6 month'
+							},{
+								step: 'month',
+								stepmode: 'backward',
+								count: 12,
+								label: '1 year'
+							},{
+								step: 'all',
+								label: 'All dates'
+							}]
+						}
+				},
+				yaxis: {
+					autorange: true,
+					title: 'Price (USD)' 
+				}
+			};
+			Plotly.newPlot('plotdiv', data, layout);
+		};
+		//Add dropdown selection menu 
+		var innerContainer = document.querySelector('[data-num="0"'),
+			plotEl = innerContainer.querySelector('.plot'),
+			currencySelector = innerContainer.querySelector('.currencydata');
+		
+		function assignOptions(textArray, selector){
+			for(var i = 0; i < textArray.length; i++){
+				var currentOption = document.createElement('option');
+				currentOption.text = textArray[i]
+				selector.appendChild(currentOption);
+			}
+		}
+		assignOptions(listofCurrencies, currencySelector)
+		
+		function updateCurrency(){
+			setCandlePlot(currencySelector.value);
+		}
+		currencySelector.addEventListener('change', updateCurrency, false);
+		});
+	</script>
+</body>
